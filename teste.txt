@@ -1,0 +1,106 @@
+"Conte�do de teste" 
+
+gados
+[
+  {
+    
+    "tipo": "Touro",
+    "idade": "3 anos",
+    "preco": "15000",
+    "peso": "800",
+    "informacoes": "Conhecida pela sua excelente capacidade de produzir carne, rusticidade; bom acabamento de carcaça e precocidade, são algumas das caraterísticas que chamam a atenção do mercado",
+    "destaque": true,
+    "foto": "https://www.renascerbiotecnologia.com.br/img_system/renascer-biotecnologia-touro-reprodutor-red-angus-tellechea-2575-gran-lider-720.jpg",
+    "sexo": "MACHO",
+    "racasId": 4,
+  },
+  {
+
+    "tipo": "Terneiro Sobreano",
+    "idade": "18 meses",
+    "preco": "2200",
+    "peso": "200",
+    "informacoes": "Sua mãe é uma vaca excepcionalmente profunda e com ótimo úbere, apresenta características Hereford fundamentais necessárias para uso em ambientes adversos",
+    "destaque": true,
+    "foto": "https://www.racainseminacaoartificial.com.br/storage/animais/4344whatsapp-image-2024-08-30-at-13-31-34-2.jpeg",
+    "sexo": "MACHO",
+    "racasId": 1,
+  },
+  {
+    "tipo": "Vaca",
+    "idade": "3 anos",
+    "preco": "8000",
+    "peso": "470",
+    "informacoes": "A vaca Holandesa se destaca no Brasil por sua adaptação ao clima, alta produção de leite com maior teor de gordura e proteína, e um longo período de lactação, resultando em maior lucratividade para os produtores.",
+    "destaque": true,
+    "foto": "https://thumbs.dreamstime.com/b/vaca-holandesa-9500566.jpg",
+    "sexo": "FEMEA",
+    "racasId": 2,
+  }
+]
+
+racas
+[
+  {
+      "nome": "Hereford"
+  },
+  {
+    
+    "nome": "Holandesa"
+  },
+  {
+    
+    "nome": "Angus"
+  },
+  {
+    
+    "nome": "Red Angus"
+  },
+  {
+    
+    "nome": "Indefinida"
+  }
+]
+clientes
+[
+  {
+   
+    "nome": "Gustavo Crespo",
+    "email": "guticresp@hotmail.com",
+    "senha": "Guti@1234"
+  },
+  {
+    "id": "8ab752f8-587a-4e44-a988-b80a2224456b",
+    "nome": "Leontino Madruga",
+    "email": "leontinomadruga@hotmail.com",
+    "senha": "Leo@1234"
+  },
+  {
+    "id": "96af8418-4e0c-41ab-bbcc-d5da69cb76a0",
+    "nome": "Paulo Brito",
+    "email": "paulo@gmail.com",
+    "senha": "Paulo@1234
+  }
+]
+
+admins
+[
+  {
+    "id": 1,
+    "nome": "Leontino Madruga",
+    "email": "leontinomadruga@hotmail.com",
+    "senha": "Leo#1234"
+  },
+  {
+    "id": 2,
+    "nome": "Pedro Pedreira",
+    "email": "pedro@gmail.com",
+    "senha": "Pedro#1234"
+  },
+  {
+    "id": 3,
+    "nome": "Paulo Gomes",
+    "email": "paulo@gmail.com",
+    "senha": Paulo#1234"
+  }
+]

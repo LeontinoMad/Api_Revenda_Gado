@@ -1,0 +1,92 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Raca {
+  id        Int      @id @default(autoincrement())
+  nome      String   @db.VarChar(30)
+  gados    Gado  []  
+  
+  @@map("racas")
+}
+
+model Proposta {
+  id          Int       @id @default(autoincrement())
+  cliente     Cliente   @relation(fields: [clienteId], references: [id])
+  clienteId   String    @db.VarChar(36)
+  gado        Gado      @relation(fields: [gadoId], references: [id])
+  gadoId      Int
+  descricao   String    @db.VarChar(255)
+  resposta    String?   @db.VarChar(255)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt  
+  @@map("propostas")
+}
+model Gado {
+  id          Int        @id @default(autoincrement())
+  tipo        String     @db.VarChar(60)
+  idade       String     @db.VarChar(30)
+  preco       Decimal    @db.Decimal(10, 2)
+  peso        Decimal    @db.Decimal(10, 3)
+  informacoes String     @db.Text 
+  destaque    Boolean    @default(true)
+  foto        String
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  sexo        Sexo       @default(MACHO)
+  racas       Raca       @relation(fields: [racasId], references: [id])
+  racasId     Int
+  admin       Admin        @relation(fields: [adminId], references: [id])
+  adminId     Int          @default(1)
+  fotos       Foto[]
+  propostas   Proposta[]
+  
+  @@map("gados")
+  }
+
+  model Foto {
+  id          Int      @id @default(autoincrement())
+  descricao   String   @db.VarChar(30)
+  codigoFoto  String   @db.LongText
+  gado       Gado    @relation(fields: [gadoId], references: [id])
+  gadoId     Int
+  @@map("fotos")
+}
+
+  model Cliente {
+  id           String   @db.VarChar(36) @id @default(uuid())
+  nome         String   @db.VarChar(60)
+  email        String   @db.VarChar(60) @unique
+  senha        String   @db.VarChar(60)   // senha deve ser varchar(60)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt  
+  propostas    Proposta[]
+ 
+  @@map("clientes")
+}
+
+model Admin {
+  id           Int      @id @default(autoincrement())
+  nome         String   @db.VarChar(60)
+  email        String   @db.VarChar(60) @unique
+  senha        String   @db.VarChar(60)   // senha deve ser varchar(60)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt  
+  gados       Gado[]
+  @@map("admins")
+}
+
+enum Sexo {
+  MACHO
+  FEMEA
+}
