@@ -4,6 +4,7 @@ import { Router } from "express";
 const prisma = new PrismaClient();
 const router = Router();
 
+// Rota GET: Retorna todos os gados
 router.get("/", async (req, res) => {
   try {
     const gados = await prisma.gado.findMany({
@@ -11,12 +12,20 @@ router.get("/", async (req, res) => {
         racas: true,
       },
     });
-    res.status(200).json(gados);
+
+    // Adiciona valor padrão para 'foto' caso esteja ausente
+    const gadosComFotoPadrao = gados.map((gado) => ({
+      ...gado,
+      foto: gado.foto || "/default-image.jpg",
+    }));
+
+    res.status(200).json(gadosComFotoPadrao);
   } catch (error) {
     res.status(400).json(error);
   }
 });
 
+// Rota POST: Cria um novo gado
 router.post("/", async (req, res) => {
   const {
     tipo,
@@ -24,32 +33,21 @@ router.post("/", async (req, res) => {
     preco,
     peso,
     informacoes,
-    //destaque,
-    foto,
+    foto = "/default-image.jpg", // Valor padrão
     sexo,
     racasId,
   } = req.body;
 
-  if (
-    !tipo ||
-    !idade ||
-    !preco ||
-    !peso ||
-    !informacoes ||
-    // !destaque ||
-    !foto ||
-    !sexo ||
-    !racasId
-  ) {
+  if (!tipo || !idade || !preco || !peso || !informacoes || !sexo || !racasId) {
     res.status(400).json({
-      erro: "Informe tipo, idade, preco, peso, informaçoes, destaque, foto, sexo, racasId",
+      erro: "Informe tipo, idade, preco, peso, informações, sexo e racasId",
     });
     return;
   }
 
   try {
     const gado = await prisma.gado.create({
-      data: { tipo, idade, preco, peso, informacoes, foto, racasId },
+      data: { tipo, idade, preco, peso, informacoes, foto, sexo, racasId },
     });
     res.status(201).json(gado);
   } catch (error) {
@@ -57,6 +55,7 @@ router.post("/", async (req, res) => {
   }
 });
 
+// Rota DELETE: Remove um gado pelo ID
 router.delete("/:id", async (req, res) => {
   const { id } = req.params;
 
@@ -70,13 +69,14 @@ router.delete("/:id", async (req, res) => {
   }
 });
 
+// Rota PUT: Atualiza informações de um gado pelo ID
 router.put("/:id", async (req, res) => {
   const { id } = req.params;
-  const { sexo, racasId, foto } = req.body;
+  const { sexo, racasId, foto = "/default-image.jpg" } = req.body; // Valor padrão
 
   if (!sexo || !racasId) {
     res.status(400).json({
-      erro: "Informe sexo ou racasId",
+      erro: "Informe sexo e racasId",
     });
     return;
   }
@@ -92,6 +92,7 @@ router.put("/:id", async (req, res) => {
   }
 });
 
+// Rota GET: Pesquisa gados por termo
 router.get("/pesquisa/:termo", async (req, res) => {
   const { termo } = req.params;
   const termoNumero = Number(termo);
@@ -104,12 +105,19 @@ router.get("/pesquisa/:termo", async (req, res) => {
         },
         where: {
           OR: [
-            { tipo: { contains: termo.toLowerCase() } }, // Converte o termo para minúsculas
-            { racas: { nome: { contains: termo.toLowerCase() } } }, // Converte o nome da raça para minúsculas
+            { tipo: { contains: termo.toLowerCase() } }, // Busca por tipo
+            { racas: { nome: { contains: termo.toLowerCase() } } }, // Busca por raça
           ],
         },
       });
-      res.status(200).json(gados);
+
+      // Adiciona valor padrão para 'foto'
+      const gadosComFotoPadrao = gados.map((gado) => ({
+        ...gado,
+        foto: gado.foto || "/default-image.jpg",
+      }));
+
+      res.status(200).json(gadosComFotoPadrao);
     } catch (error) {
       res.status(400).json(error);
     }
@@ -123,13 +131,21 @@ router.get("/pesquisa/:termo", async (req, res) => {
           preco: { lte: termoNumero },
         },
       });
-      res.status(200).json(gados);
+
+      // Adiciona valor padrão para 'foto'
+      const gadosComFotoPadrao = gados.map((gado) => ({
+        ...gado,
+        foto: gado.foto || "/default-image.jpg",
+      }));
+
+      res.status(200).json(gadosComFotoPadrao);
     } catch (error) {
       res.status(400).json(error);
     }
   }
 });
 
+// Rota GET: Busca um gado pelo ID
 router.get("/:id", async (req, res) => {
   const { id } = req.params;
 
@@ -140,6 +156,15 @@ router.get("/:id", async (req, res) => {
         racas: true,
       },
     });
+
+    if (!gado) {
+      res.status(404).json({ erro: "Gado não encontrado" });
+      return;
+    }
+
+    // Adiciona valor padrão para 'foto'
+    gado.foto = gado.foto || "/default-image.jpg";
+
     res.status(200).json(gado);
   } catch (error) {
     res.status(400).json(error);
