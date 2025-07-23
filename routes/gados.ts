@@ -7,11 +7,7 @@ const router = Router();
 // Rota GET: Retorna todos os gados
 router.get("/", async (req, res) => {
   try {
-    const gados = await prisma.gado.findMany({
-      include: {
-        racas: true,
-      },
-    });
+    const gados = await prisma.gado.findMany();
 
     // Adiciona valor padrão para 'foto' caso esteja ausente
     const gadosComFotoPadrao = gados.map((gado) => ({
@@ -25,7 +21,8 @@ router.get("/", async (req, res) => {
   }
 });
 
-// Rota POST: Cria um novo gado
+/// routes/gados.ts (ajuste na rota POST de cadastro de gado)
+
 router.post("/", async (req, res) => {
   const {
     tipo,
@@ -33,25 +30,67 @@ router.post("/", async (req, res) => {
     preco,
     peso,
     informacoes,
-    foto = "/default-image.jpg", // Valor padrão
+    destaque,
+    foto,
     sexo,
     racasId,
+    adminId, // Certifique-se que adminId também está sendo desestruturado
   } = req.body;
 
-  if (!tipo || !idade || !preco || !peso || !informacoes || !sexo || !racasId) {
-    res.status(400).json({
-      erro: "Informe tipo, idade, preco, peso, informações, sexo e racasId",
-    });
+  // Adicione validações para todos os campos obrigatórios se ainda não o fez
+  if (
+    !tipo ||
+    !idade ||
+    !preco ||
+    !peso ||
+    !informacoes ||
+    !foto ||
+    !sexo ||
+    !racasId ||
+    !adminId
+  ) {
+    res
+      .status(400)
+      .json({ erro: "Informe todos os campos obrigatórios do gado." });
     return;
   }
 
+  // Se você tiver validações para preco/peso como números, adicione aqui
+  // Ex: if (isNaN(preco) || isNaN(peso)) { ... }
+
   try {
     const gado = await prisma.gado.create({
-      data: { tipo, idade, preco, peso, informacoes, foto, sexo, racasId },
+      data: {
+        tipo,
+        idade,
+        preco,
+        peso,
+        informacoes,
+        destaque,
+        foto,
+        sexo,
+        // --- CORREÇÃO AQUI: USAR 'CONNECT' PARA OS RELACIONAMENTOS ---
+        racas: {
+          connect: { id: racasId }, // Conecta à raça existente pelo ID
+        },
+        admin: {
+          connect: { id: adminId }, // Conecta ao admin existente pelo ID (UUID)
+        },
+        // -----------------------------------------------------------
+      },
     });
     res.status(201).json(gado);
-  } catch (error) {
-    res.status(400).json(error);
+  } catch (error: any) {
+    // Trate erros de chave estrangeira mais especificamente se quiser
+    if (error.code === "P2003") {
+      res
+        .status(400)
+        .json({
+          erro: "Erro de chave estrangeira. Verifique se racasId e adminId são válidos e existem no banco de dados.",
+        });
+    } else {
+      res.status(400).json(error);
+    }
   }
 });
 

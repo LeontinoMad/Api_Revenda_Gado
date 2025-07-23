@@ -1,15 +1,24 @@
 import { PrismaClient } from "@prisma/client";
 import { Router } from "express";
-import nodemailer from "nodemailer";
+// import nodemailer from "nodemailer"; // Não precisamos mais se não vamos enviar email
 
 const prisma = new PrismaClient();
 const router = Router();
 
+// Rota para listar todas as propostas com dados do cliente e gado
 router.get("/", async (req, res) => {
   try {
     const propostas = await prisma.proposta.findMany({
       include: {
-        cliente: true,
+        cliente: {
+          select: {
+            // Seleciona apenas os campos necessários do cliente
+            id: true,
+            nome: true,
+            cpf: true,
+            telefone: true, // Inclui o telefone para possível uso com WhatsApp
+          },
+        },
         gado: true,
       },
     });
@@ -19,6 +28,7 @@ router.get("/", async (req, res) => {
   }
 });
 
+// Rota para criar uma nova proposta
 router.post("/", async (req, res) => {
   const { clienteId, gadoId, descricao } = req.body;
 
@@ -37,37 +47,35 @@ router.post("/", async (req, res) => {
   }
 });
 
-async function enviaEmail(
+// Função para enviar e-mail (REMOVIDA OU ADAPTADA)
+// Se você não tem mais 'email' no modelo Cliente, essa função não pode ser usada como está.
+// Caso você queira implementar envio de mensagem via WhatsApp, o código seria diferente.
+/*
+async function enviaMensagemWhatsApp(
   nome: string,
-  email: string,
+  telefone: string, // Agora usa o telefone
   descricao: string,
   resposta: string
 ) {
-  const transporter = nodemailer.createTransport({
-    host: "smtp-relay.brevo.com",
-    port: 587,
-    secure: false, // true for port 465, false for other ports
-    auth: {
-      user: "7d4b50001@smtp-brevo.com",
-      pass: "ZW0295BMVamtbKTr",
-    },
-  });
+  // Aqui você faria a integração com uma API de WhatsApp (ex: Twilio, MessageBird, etc.)
+  // Isso requer uma conta em uma dessas plataformas e as credenciais.
+  // Exemplo hipotético (apenas para ilustrar a ideia):
+  // const client = require('twilio')(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
+  // client.messages.create({
+  //   body: `Olá ${nome}, sobre sua proposta "${descricao}", a resposta é: "${resposta}".`,
+  //   from: 'whatsapp:+14155238886', // Seu número de WhatsApp Business da Twilio
+  //   to: `whatsapp:${telefone}` // Telefone do cliente com +DDI
+  // })
+  // .then(message => console.log(message.sid))
+  // .catch(error => console.error(error));
 
-  const info = await transporter.sendMail({
-    from: "leontinomadruga@gmail.com", // sender address
-    to: email, // list of receivers
-    subject: "Re: Proposta Revenda de gado", // Subject line
-    text: resposta, // plain text body
-    html: `<h3>Meu amigo Cliente: ${nome}</h3>
-           <h3>Proposta: ${descricao}</h3>
-           <h3>Resposta da Revenda: ${resposta}</h3>
-           <p>Muito obrigado pelo seu contato</p>
-           <p>Revenda de Gado Biduca.</p>`,
-  });
-
-  console.log("Message sent: %s", info.messageId);
+  console.log(`Simulação de envio de mensagem WhatsApp para ${telefone} (${nome}):`);
+  console.log(`Proposta: "${descricao}"`);
+  console.log(`Resposta: "${resposta}"`);
 }
+*/
 
+// Rota para atualizar uma proposta (adicionar resposta)
 router.patch("/:id", async (req, res) => {
   const { id } = req.params;
   const { resposta } = req.body;
@@ -78,31 +86,57 @@ router.patch("/:id", async (req, res) => {
   }
 
   try {
-    const proposta = await prisma.proposta.update({
+    // Primeiro, busca a proposta para obter os dados do cliente e gado antes de atualizar
+    const dadosPropostaOriginal = await prisma.proposta.findUnique({
+      where: { id: Number(id) },
+      include: {
+        cliente: {
+          select: {
+            // Seleciona apenas os campos necessários do cliente
+            id: true,
+            nome: true,
+            cpf: true,
+            telefone: true, // Garante que o telefone do cliente é carregado
+          },
+        },
+        gado: true,
+      },
+    });
+
+    if (!dadosPropostaOriginal) {
+      return res.status(404).json({ erro: "Proposta não encontrada." });
+    }
+
+    // Agora, atualiza a proposta com a resposta
+    const propostaAtualizada = await prisma.proposta.update({
       where: { id: Number(id) },
       data: { resposta },
     });
 
-    const dados = await prisma.proposta.findUnique({
-      where: { id: Number(id) },
-      include: {
-        cliente: true,
-      },
-    });
-
-    enviaEmail(
-      dados?.cliente.nome as string,
-      dados?.cliente.email as string,
-      dados?.descricao as string,
-      resposta
+    // Se você tivesse uma função de envio de WhatsApp, chamaria ela aqui:
+    /*
+    if (dadosPropostaOriginal.cliente?.telefone) {
+        enviaMensagemWhatsApp(
+            dadosPropostaOriginal.cliente.nome,
+            dadosPropostaOriginal.cliente.telefone, // Usa o telefone
+            dadosPropostaOriginal.descricao,
+            resposta
+        );
+    }
+    */
+    console.log(`Proposta ${id} atualizada. Resposta: "${resposta}".`);
+    console.log(
+      `Dados do cliente para comunicação (se aplicável): Nome: ${dadosPropostaOriginal.cliente?.nome}, Telefone: ${dadosPropostaOriginal.cliente?.telefone}`
     );
 
-    res.status(200).json(proposta);
+    res.status(200).json(propostaAtualizada);
   } catch (error) {
+    console.error("Erro ao atualizar proposta ou enviar notificação:", error);
     res.status(400).json(error);
   }
 });
 
+// Rota para listar propostas de um cliente específico
 router.get("/:clienteId", async (req, res) => {
   const { clienteId } = req.params;
   try {
